@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu Amigo Secreto 🎁 | Revelación Mágica</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+</head>
+<body class="reveal-body">
+  <div class="app-background"></div>
+
+  <main class="reveal-container">
+    
+    <!-- Estado 1: Tarjeta Autodestruida (Cuando el organizador u otro intenta volver a abrir el enlace) -->
+    <div id="burnedBox" class="card glass-card text-center hidden burned-card">
+      <div class="burned-icon">💥</div>
+      <div class="burned-badge">🔒 AUTODESTRUIDA POR PRIVACIDAD</div>
+      <h2 class="burned-title">Esta tarjeta ya fue abierta</h2>
+      <p class="burned-desc" id="burnedMessage">
+        Esta tarjeta pertenecía a <strong id="burnedRecipient">un participante</strong> y ya fue revelada. Por seguridad y para que nadie más (ni siquiera el organizador del sorteo) pueda saber a quién le tocó, este enlace ha sido destruido permanentemente.
+      </p>
+      <div class="burned-info-note">
+        📸 Si eres el destinatario y descargaste tu tarjeta como imagen, puedes revisarla en tus fotos o descargas.
+      </div>
+    </div>
+
+    <!-- Estado 2: Error si no hay datos o token inválido -->
+    <div id="errorBox" class="card glass-card text-center hidden">
+      <div class="emoji-large">🔍</div>
+      <h2>Enlace no válido o incompleto</h2>
+      <p class="text-muted mt-2">No pudimos encontrar la información de tu amigo secreto. Por favor solicita al organizador que revise la lista.</p>
+    </div>
+
+    <!-- Estado 3: Contenido principal de la revelación -->
+    <div id="revealMainContent" class="reveal-card card glass-card">
+      
+      <!-- Encabezado con datos del evento -->
+      <div class="reveal-header text-center">
+        <span class="card-badge">🎁 Sorteo Oficial</span>
+        <h1 class="reveal-greeting">¡Hola, <span id="recipientName" class="highlight-text">Participante</span>!</h1>
+        <p class="reveal-event-title" id="eventTitle">Amigo Invisible 2026</p>
+      </div>
+
+      <!-- Tarjeta / Caja de regalo interactiva para abrir -->
+      <div class="gift-box-wrapper">
+        <div id="giftBox" class="gift-box" role="button" tabindex="0" title="¡Haz clic o toca para abrir tu regalo!">
+          
+          <!-- Estado cerrado -->
+          <div id="giftClosedState" class="gift-closed">
+            <div class="gift-lid">
+              <div class="gift-bow">🎀</div>
+            </div>
+            <div class="gift-body">
+              <div class="gift-ribbon-vertical"></div>
+              <div class="gift-ribbon-horizontal"></div>
+              <div class="gift-tap-hint">
+                <span class="tap-icon">👆</span>
+                <span class="tap-text">TOCA AQUÍ PARA ABRIR</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estado abierto (revelado) -->
+          <div id="giftOpenedState" class="gift-opened hidden">
+            <div class="revealed-badge">TU AMIGO SECRETO ES:</div>
+            <div class="revealed-friend-name" id="secretFriendName">Nombre</div>
+            <p class="revealed-secret-tip">🤫 ¡Recuerda guardar el secreto hasta el día del intercambio!</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Alerta de autodestrucción una vez abierta -->
+      <div id="autodestructNotice" class="alert-burned-banner hidden">
+        🔒 <strong>Aviso de privacidad:</strong> Esta tarjeta se ha autodestruido en el servidor. Si cierras esta página nadie más podrá volver a abrir este enlace. <strong>¡Descarga tu imagen ahora para que no lo olvides!</strong>
+      </div>
+
+      <!-- Detalles del intercambio -->
+      <div id="eventDetailsCard" class="event-details-card">
+        <h3 class="details-heading">📋 Información del Intercambio</h3>
+        
+        <div class="details-grid">
+          <div class="detail-item" id="budgetWrapper">
+            <span class="item-icon">💰</span>
+            <div>
+              <div class="item-label">Presupuesto sugerido</div>
+              <div class="item-value" id="revealBudget">No especificado</div>
+            </div>
+          </div>
+
+          <div class="detail-item" id="dateWrapper">
+            <span class="item-icon">📅</span>
+            <div>
+              <div class="item-label">Fecha del intercambio</div>
+              <div class="item-value" id="revealDate">Por definir</div>
+            </div>
+          </div>
+
+          <div class="detail-item full-width" id="locationWrapper">
+            <span class="item-icon">📍</span>
+            <div>
+              <div class="item-label">Lugar de entrega</div>
+              <div class="item-value" id="revealLocation">Por definir</div>
+            </div>
+          </div>
+
+          <div class="detail-item full-width" id="notesWrapper">
+            <span class="item-icon">📝</span>
+            <div>
+              <div class="item-label">Notas e indicaciones</div>
+              <div class="item-value" id="revealNotes">Sin notas especiales</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie de página con sugerencias y acción para guardar la imagen -->
+      <div class="reveal-footer text-center">
+        <div class="download-section">
+          <button type="button" id="btnDownloadImage" class="btn btn-celebrate btn-lg btn-block pulse-btn">
+            📸 Guardar Tarjeta como Imagen (PNG)
+          </button>
+          <small class="text-muted mt-2 d-block">Guarda tu comprobante en la galería de tu teléfono antes de cerrar</small>
+        </div>
+
+        <div class="flex-center gap-2 mt-3">
+          <button type="button" id="btnCopyDetails" class="btn btn-outline-sm">
+            📋 Copiar datos al portapapeles
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/reveal.js?v=5"></script>
+</body>
+</html>
