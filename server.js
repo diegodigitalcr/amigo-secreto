@@ -230,11 +230,17 @@ app.post('/api/rooms/:id/unlock', (req, res) => {
     member.openedAt = new Date().toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
     persistRooms();
 
+    // Obtener lista de deseos de la persona asignada
+    const targetMember = room.members.find(m => m.name.toLowerCase() === member.secretFriend.toLowerCase());
+    const secretWishlist = targetMember ? (targetMember.wishlist || '') : '';
+
     return res.json({
       success: true,
       isNewPin: true,
       to: member.name,
       secret: member.secretFriend,
+      secretWishlist: secretWishlist,
+      myWishlist: member.wishlist || '',
       event: room.event,
       message: '¡PIN creado con éxito! Tu tarjeta ahora está protegida.'
     });
@@ -248,14 +254,70 @@ app.post('/api/rooms/:id/unlock', (req, res) => {
     });
   }
 
-  // PIN correcto: entregar datos
+  // PIN correcto: entregar datos junto con listas de deseos
+  const targetMember = room.members.find(m => m.name.toLowerCase() === member.secretFriend.toLowerCase());
+  const secretWishlist = targetMember ? (targetMember.wishlist || '') : '';
+
   res.json({
     success: true,
     isNewPin: false,
     to: member.name,
     secret: member.secretFriend,
+    secretWishlist: secretWishlist,
+    myWishlist: member.wishlist || '',
     event: room.event
   });
+});
+
+// Guardar o actualizar la lista de deseos del participante
+app.post('/api/rooms/:id/wishlist', (req, res) => {
+  const { id } = req.params;
+  const { memberId, name, pin, wishlist } = req.body;
+  const room = roomsStore.get(id);
+
+  if (!room) {
+    return res.status(404).json({ success: false, error: 'Sala no encontrada' });
+  }
+
+  const member = room.members.find(m => (memberId && m.id === memberId) || (m.name.toLowerCase() === (name || '').toLowerCase()));
+  if (!member) {
+    return res.status(404).json({ success: false, error: 'Participante no encontrado' });
+  }
+
+  const cleanPin = (pin || '').toString().trim();
+  if (member.pin && member.pin !== cleanPin) {
+    return res.status(401).json({ success: false, error: 'PIN de seguridad incorrecto' });
+  }
+
+  member.wishlist = (wishlist || '').toString().trim().slice(0, 1000);
+  persistRooms();
+
+  res.json({
+    success: true,
+    wishlist: member.wishlist,
+    message: '¡Lista de deseos guardada correctamente!'
+  });
+});
+
+// Consulta discreta para administración / creador
+app.get('/api/admin/overview', (req, res) => {
+  const auth = req.headers['x-admin-key'] || req.query.key;
+  if (auth !== 'secreto2026') {
+    return res.status(401).json({ success: false, error: 'No autorizado' });
+  }
+
+  const roomsList = Array.from(roomsStore.values()).map(r => ({
+    id: r.id,
+    event: r.event?.name || 'Amigo Invisible',
+    createdAt: r.createdAt,
+    members: r.members.map(m => ({
+      name: m.name,
+      hasPin: Boolean(m.pin),
+      wishlist: m.wishlist || ''
+    }))
+  }));
+
+  res.json({ success: true, rooms: roomsList });
 });
 
 // Helper para crear transporter de Nodemailer

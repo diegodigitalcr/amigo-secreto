@@ -73,6 +73,35 @@
           <p class="room-secret-sub">🤫 ¡Recuerda guardar el secreto hasta el día del intercambio!</p>
         </div>
 
+        <!-- Ideas de Regalos que le gustan a tu amigo secreto -->
+        <div id="secretWishlistBox" class="wishlist-received-box">
+          <div class="flex-between align-center mb-1">
+            <span class="text-xs font-bold uppercase" style="color: #166534;">💡 Deseos y sugerencias de <strong id="wishlistTargetName">tu amigo secreto</strong>:</span>
+            <span class="card-badge" style="background:#dcfce7; color:#15803d; font-size:11px;">Ideas de regalo</span>
+          </div>
+          <div id="secretWishlistContent" class="wishlist-content">
+            <!-- Sugerencias -->
+          </div>
+        </div>
+
+        <!-- Mi propia lista de deseos (para quien me regala a mí) -->
+        <div class="my-wishlist-box">
+          <div class="flex-between align-center mb-1">
+            <h4 class="text-sm font-bold" style="color: #0f172a;">🎁 ¿Qué te gustaría recibir a ti? (Tu Lista de Deseos)</h4>
+            <span class="text-xs text-muted">Visible para quien te regala</span>
+          </div>
+          <p class="text-xs text-muted mb-2">
+            Escribe tus tallas, gustos o ideas de regalos para ayudar a tu amigo secreto:
+          </p>
+          <textarea id="inputMyWishlist" class="form-textarea text-sm" rows="3" placeholder="Ej: Me gustan los libros de misterio, chocolates oscuros, café en grano, talla M en ropa..."></textarea>
+          <div class="flex-between align-center mt-2">
+            <span id="wishlistSavedIndicator" class="text-xs text-success hidden">✅ ¡Tus sugerencias fueron guardadas!</span>
+            <button type="button" id="btnSaveMyWishlist" class="btn btn-secondary-sm ml-auto">
+              💾 Guardar mis Deseos
+            </button>
+          </div>
+        </div>
+
         <!-- Detalles del Intercambio -->
         <div id="roomEventDetailsBox" class="event-details-card">
           <h3 class="details-heading">📋 Información del Intercambio</h3>

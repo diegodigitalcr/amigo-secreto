@@ -1581,6 +1581,41 @@ label {
   margin-top: 10px;
 }
 
+/* Listas de deseos en sala.html */
+.wishlist-received-box {
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  margin: 18px 0;
+  text-align: left;
+}
+
+.wishlist-content {
+  color: #166534;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+.wishlist-empty-hint {
+  color: #64748b;
+  font-weight: normal;
+  font-style: italic;
+}
+
+.my-wishlist-box {
+  background: #ffffff;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  margin: 18px 0;
+  text-align: left;
+  box-shadow: var(--shadow-sm);
+}
+
 /* Tarjeta destacada de compartir en grupo para el organizador (index.html) */
 .hero-group-share-card {
   background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);

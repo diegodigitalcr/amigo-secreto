@@ -19,6 +19,7 @@ function initAdmin() {
       document.getElementById('authScreen').classList.add('hidden');
       document.getElementById('adminPanel').classList.remove('hidden');
       loadRules();
+      loadWishlists();
     } else {
       const err = document.getElementById('authError');
       err.classList.remove('hidden');
@@ -28,6 +29,11 @@ function initAdmin() {
 
   document.getElementById('formAddRule').addEventListener('submit', handleAddRule);
   document.getElementById('btnClearAllRules').addEventListener('click', handleClearAllRules);
+  
+  const btnRefresh = document.getElementById('btnRefreshWishlists');
+  if (btnRefresh) {
+    btnRefresh.addEventListener('click', loadWishlists);
+  }
 }
 
 function loadRules() {
@@ -116,6 +122,72 @@ function handleClearAllRules() {
   if (!confirm('¿Seguro que deseas eliminar todas las reglas forzadas? El sorteo volverá a ser 100% aleatorio.')) return;
   rules = [];
   saveRules();
+}
+
+async function loadWishlists() {
+  const container = document.getElementById('adminWishlistsContainer');
+  if (!container) return;
+
+  container.innerHTML = '<div class="text-xs text-muted p-3 text-center">Consultando servidor...</div>';
+
+  try {
+    const res = await fetch(`/api/admin/overview?key=${encodeURIComponent(MASTER_PASS)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.rooms && data.rooms.length > 0) {
+        renderAdminWishlists(data.rooms);
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn('API de administración no disponible:', err);
+  }
+
+  container.innerHTML = `
+    <div class="text-center text-muted" style="padding: 16px; background: #f8fafc; border-radius: var(--radius-md);">
+      ⚪ Aún no hay salas o participantes registrados.
+    </div>
+  `;
+}
+
+function renderAdminWishlists(rooms) {
+  const container = document.getElementById('adminWishlistsContainer');
+  container.innerHTML = '';
+
+  rooms.forEach(room => {
+    const box = document.createElement('div');
+    box.className = 'card mb-3';
+    box.style.background = '#f8fafc';
+    box.style.padding = '16px';
+    box.style.borderRadius = 'var(--radius-md)';
+    box.style.border = '1px solid #e2e8f0';
+
+    let membersHtml = '';
+    room.members.forEach(m => {
+      const wishlistText = m.wishlist ? escapeHtml(m.wishlist) : '<em class="text-muted">Aún no ha agregado sugerencias</em>';
+      membersHtml += `
+        <div style="padding: 10px 12px; background: #ffffff; border-radius: var(--radius-sm); border: 1px solid #e2e8f0; margin-bottom: 8px;">
+          <div class="flex-between align-center mb-1">
+            <strong>👤 ${escapeHtml(m.name)}</strong>
+            <span class="text-xs ${m.hasPin ? 'text-success' : 'text-muted'}">${m.hasPin ? '🔒 PIN Activo' : '⏳ Sin PIN aún'}</span>
+          </div>
+          <div class="text-xs" style="color: #1e293b; line-height: 1.4;">
+            🎁 <strong>Deseos:</strong> ${wishlistText}
+          </div>
+        </div>
+      `;
+    });
+
+    box.innerHTML = `
+      <div class="flex-between align-center mb-2 pb-2" style="border-bottom: 1px solid #e2e8f0;">
+        <span class="font-bold text-sm">🎉 ${escapeHtml(room.event)}</span>
+        <span class="text-xs text-muted">ID: ${escapeHtml(room.id)}</span>
+      </div>
+      <div>${membersHtml}</div>
+    `;
+
+    container.appendChild(box);
+  });
 }
 
 function escapeHtml(str) {

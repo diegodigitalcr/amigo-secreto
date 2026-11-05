@@ -32,6 +32,7 @@ function bindRoomEvents() {
   });
 
   document.getElementById('btnDownloadRoomImage').addEventListener('click', downloadRoomImage);
+  document.getElementById('btnSaveMyWishlist').addEventListener('click', handleSaveMyWishlist);
 }
 
 async function initRoom() {
@@ -223,6 +224,10 @@ async function handleSubmitPin() {
         revealedData = {
           to: data.to,
           secret: data.secret,
+          secretWishlist: data.secretWishlist || '',
+          myWishlist: data.myWishlist || '',
+          currentPin: pin,
+          memberId: selectedMember.id,
           event: data.event?.name || roomData.event?.name || 'Amigo Invisible',
           budget: data.event?.budget || roomData.event?.budget || '',
           date: data.event?.date || roomData.event?.date || '',
@@ -262,9 +267,17 @@ async function handleSubmitPin() {
         return;
       }
 
+      const assignedSecret = rawMember.secret || rawMember.secretFriend;
+      const secretWishKey = 'room_wishlist_' + (roomData.id || 'r') + '_' + (assignedSecret || '').toLowerCase();
+      const myWishKey = 'room_wishlist_' + (roomData.id || 'r') + '_' + rawMember.name.toLowerCase();
+
       revealedData = {
         to: rawMember.name,
-        secret: rawMember.secret || rawMember.secretFriend,
+        secret: assignedSecret,
+        secretWishlist: localStorage.getItem(secretWishKey) || '',
+        myWishlist: localStorage.getItem(myWishKey) || '',
+        currentPin: pin,
+        memberId: rawMember.id || rawMember.name,
         event: roomData.event?.name || 'Amigo Invisible',
         budget: roomData.event?.budget || '',
         date: roomData.event?.date || '',
@@ -289,6 +302,29 @@ function showRevealedCard(data) {
   // Llenar datos
   document.getElementById('revealedRecipientName').textContent = data.to;
   document.getElementById('revealedSecretName').textContent = data.secret;
+
+  // Llenar lista de deseos de mi amigo secreto asignado
+  const targetNameEl = document.getElementById('wishlistTargetName');
+  if (targetNameEl) targetNameEl.textContent = data.secret;
+
+  const secretWishlistEl = document.getElementById('secretWishlistContent');
+  if (secretWishlistEl) {
+    if (data.secretWishlist && data.secretWishlist.trim()) {
+      secretWishlistEl.textContent = data.secretWishlist;
+      secretWishlistEl.classList.remove('wishlist-empty-hint');
+    } else {
+      secretWishlistEl.textContent = 'Aún no ha agregado ideas de regalo. ¡Sorpréndele con un gran detalle!';
+      secretWishlistEl.classList.add('wishlist-empty-hint');
+    }
+  }
+
+  // Pre-llenar mi propia lista de deseos previa
+  const myWishlistInput = document.getElementById('inputMyWishlist');
+  if (myWishlistInput) {
+    myWishlistInput.value = data.myWishlist || '';
+  }
+  const savedIndicator = document.getElementById('wishlistSavedIndicator');
+  if (savedIndicator) savedIndicator.classList.add('hidden');
 
   // Llenar detalles del intercambio
   const budgetBox = document.getElementById('revealDetailBudget');
@@ -545,6 +581,47 @@ function decodePayload(str) {
   }
   const jsonStr = new TextDecoder().decode(bytes);
   return JSON.parse(jsonStr);
+}
+
+async function handleSaveMyWishlist() {
+  if (!revealedData) return;
+  const inputEl = document.getElementById('inputMyWishlist');
+  const wishlistText = (inputEl.value || '').trim();
+  const indicator = document.getElementById('wishlistSavedIndicator');
+  const btn = document.getElementById('btnSaveMyWishlist');
+
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  try {
+    if (currentRoomId && currentRoomId !== 'local_room') {
+      const res = await fetch(`/api/rooms/${encodeURIComponent(currentRoomId)}/wishlist`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId: revealedData.memberId,
+          name: revealedData.to,
+          pin: revealedData.currentPin,
+          wishlist: wishlistText
+        })
+      });
+      if (res.ok) {
+        revealedData.myWishlist = wishlistText;
+      }
+    }
+
+    // Respaldo local
+    const localKey = 'room_wishlist_' + (currentRoomId || 'r') + '_' + revealedData.to.toLowerCase();
+    localStorage.setItem(localKey, wishlistText);
+
+    indicator.classList.remove('hidden');
+    setTimeout(() => indicator.classList.add('hidden'), 3500);
+  } catch (err) {
+    console.warn('Error guardando wishlist:', err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Guardar mis Deseos';
+  }
 }
 
 function escapeHtml(str) {

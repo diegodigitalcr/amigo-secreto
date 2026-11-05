@@ -134,8 +134,25 @@
         </div>
       </div>
 
-      <div class="text-xs text-muted" style="border-top: 1px solid #e2e8f0; padding-top: 16px;">
-        💡 <strong>Nota:</strong> Estas reglas quedan activas en tu navegador. Cuando hagas el sorteo en la página principal, el algoritmo las aplicará de forma silenciosa e imperceptible.
+      <!-- Sección Discreta: Consulta de Deseos de los Participantes -->
+      <div class="mt-4 pt-4" style="border-top: 1px solid #e2e8f0;">
+        <div class="flex-between align-center mb-3">
+          <div>
+            <h3 class="text-sm font-bold uppercase text-muted">📋 Deseos y Sugerencias de Participantes</h3>
+            <p class="text-xs text-muted">Consulta lo que cada persona ha pedido recibir:</p>
+          </div>
+          <button type="button" id="btnRefreshWishlists" class="btn btn-outline-sm">🔄 Actualizar</button>
+        </div>
+
+        <div id="adminWishlistsContainer">
+          <div class="text-xs text-muted" style="padding: 16px; background: #f8fafc; border-radius: var(--radius-md); text-align: center;">
+            Cargando listas de deseos...
+          </div>
+        </div>
+      </div>
+
+      <div class="text-xs text-muted" style="border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 24px;">
+        💡 <strong>Nota:</strong> Estas opciones son exclusivas de tu navegador. Cuando hagas el sorteo en la página principal, el algoritmo aplicará las reglas de forma silenciosa e imperceptible.
       </div>
 
     </div>
