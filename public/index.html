@@ -245,15 +245,24 @@
             </div>
           </div>
 
+          <!-- Enlace directo corto y limpio -->
+          <label class="text-xs font-bold text-muted uppercase">Enlace directo de la sala:</label>
+          <div class="short-link-container">
+            <input type="text" id="inputDirectRoomUrl" class="short-link-input" readonly title="Haz clic para copiar el enlace">
+            <button type="button" id="btnCopyDirectUrl" class="btn btn-outline flex-center gap-1" style="white-space:nowrap;">
+              🔗 Copiar Enlace
+            </button>
+          </div>
+
           <div class="group-actions flex-wrap gap-2 mb-3">
             <a id="btnShareGroupWhatsApp" href="#" target="_blank" class="btn btn-whatsapp-group flex-center gap-2">
               <span>📲</span> Enviar al Grupo de WhatsApp
             </a>
             <button type="button" id="btnCopyGroupMessage" class="btn btn-secondary flex-center gap-2">
-              <span>📋</span> Copiar Mensaje del Grupo
+              <span>📋</span> Copiar Mensaje Completo
             </button>
             <a id="btnOpenRoomPreview" href="#" target="_blank" class="btn btn-outline flex-center gap-2">
-              <span>👀</span> Abrir Sala como Participante
+              <span>👀</span> Probar Sala
             </a>
           </div>
 

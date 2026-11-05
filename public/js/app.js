@@ -141,6 +141,19 @@ function bindEvents() {
     btnCopyGroup.addEventListener('click', handleCopyGroupMessage);
   }
 
+  // Copiar Enlace Directo Corto
+  const btnCopyDirect = document.getElementById('btnCopyDirectUrl');
+  if (btnCopyDirect) {
+    btnCopyDirect.addEventListener('click', handleCopyDirectUrl);
+  }
+  const inputDirect = document.getElementById('inputDirectRoomUrl');
+  if (inputDirect) {
+    inputDirect.addEventListener('click', () => {
+      inputDirect.select();
+      handleCopyDirectUrl();
+    });
+  }
+
   // Visibilidad del organizador (spoiler)
   document.getElementById('btnToggleOrganizerView').addEventListener('click', () => {
     state.showOrganizerView = !state.showOrganizerView;
@@ -472,6 +485,8 @@ async function handleExecuteDraw() {
 
   // Crear la Sala Grupal con PIN
   let roomId = 'sala_' + Math.random().toString(36).substr(2, 7);
+  let isServerRoom = false;
+
   try {
     const roomRes = await fetch('/api/rooms', {
       method: 'POST',
@@ -495,6 +510,7 @@ async function handleExecuteDraw() {
       const roomJson = await roomRes.json();
       if (roomJson.roomId) {
         roomId = roomJson.roomId;
+        isServerRoom = true;
       }
     }
   } catch (roomErr) {
@@ -503,24 +519,29 @@ async function handleExecuteDraw() {
 
   state.roomId = roomId;
 
-  // Respaldo codificado en hash para compatibilidad con hosting estático (Netlify)
-  const encodedRoom = encodePayload({
-    id: roomId,
-    event: {
-      name: state.event.name,
-      budget: state.event.budget || '',
-      date: state.event.date || '',
-      location: state.event.location || '',
-      notes: state.event.notes || ''
-    },
-    members: results.map(r => ({
-      id: r.giverId,
-      name: r.giverName,
-      secret: r.receiverName
-    }))
-  });
+  // Generar URL corta y limpia si el servidor registró la sala
+  if (isServerRoom) {
+    state.groupRoomUrl = `${window.location.origin}/sala.html?id=${roomId}`;
+  } else {
+    // Respaldo codificado en hash únicamente para entornos sin backend (ej. Netlify Drop estático)
+    const encodedRoom = encodePayload({
+      id: roomId,
+      event: {
+        name: state.event.name,
+        budget: state.event.budget || '',
+        date: state.event.date || '',
+        location: state.event.location || '',
+        notes: state.event.notes || ''
+      },
+      members: results.map(r => ({
+        id: r.giverId,
+        name: r.giverName,
+        secret: r.receiverName
+      }))
+    });
+    state.groupRoomUrl = `${window.location.origin}/sala.html?id=${roomId}#room=${encodedRoom}`;
+  }
 
-  state.groupRoomUrl = `${window.location.origin}/sala.html?id=${roomId}#room=${encodedRoom}`;
   state.groupRoomText = buildGroupNotificationText(state.groupRoomUrl);
 
   saveToLocalStorage();
@@ -554,23 +575,24 @@ function buildGroupNotificationText(roomUrl) {
 }
 
 function renderGroupShareHeroCard() {
-  if (!state.groupRoomUrl && state.results.length > 0) {
-    const encodedRoom = encodePayload({
-      id: state.roomId || 'sala_local',
-      event: state.event,
-      members: state.results.map(r => ({
-        id: r.giverId,
-        name: r.giverName,
-        secret: r.receiverName
-      }))
-    });
-    state.groupRoomUrl = `${window.location.origin}/sala.html?id=${state.roomId || 'sala_local'}#room=${encodedRoom}`;
+  // Limpiar URLs previas largas con #room= si ya existe roomId del servidor
+  if (state.groupRoomUrl && state.roomId && state.groupRoomUrl.includes('#room=')) {
+    state.groupRoomUrl = `${window.location.origin}/sala.html?id=${state.roomId}`;
+    state.groupRoomText = buildGroupNotificationText(state.groupRoomUrl);
+    saveToLocalStorage();
+  } else if (!state.groupRoomUrl && state.results.length > 0) {
+    state.groupRoomUrl = `${window.location.origin}/sala.html?id=${state.roomId || 'sala_local'}`;
     state.groupRoomText = buildGroupNotificationText(state.groupRoomUrl);
   }
 
   const btnShareWA = document.getElementById('btnShareGroupWhatsApp');
   const btnOpenRoom = document.getElementById('btnOpenRoomPreview');
   const previewBox = document.getElementById('groupMessagePreview');
+  const inputDirectUrl = document.getElementById('inputDirectRoomUrl');
+
+  if (inputDirectUrl && state.groupRoomUrl) {
+    inputDirectUrl.value = state.groupRoomUrl;
+  }
 
   if (previewBox && state.groupRoomText) {
     previewBox.textContent = state.groupRoomText;
@@ -583,6 +605,15 @@ function renderGroupShareHeroCard() {
   if (btnOpenRoom && state.groupRoomUrl) {
     btnOpenRoom.href = state.groupRoomUrl;
   }
+}
+
+function handleCopyDirectUrl() {
+  if (!state.groupRoomUrl) return;
+  navigator.clipboard.writeText(state.groupRoomUrl).then(() => {
+    showToast('🔗 ¡Enlace de la sala copiado al portapapeles!', 'success');
+  }).catch(() => {
+    showToast('No se pudo copiar automáticamente. Por favor selecciónalo manualmente.', 'error');
+  });
 }
 
 function handleCopyGroupMessage() {
