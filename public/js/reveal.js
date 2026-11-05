@@ -119,7 +119,7 @@ function renderCardContent(data) {
   const dateEl = document.getElementById('revealDate');
   const dateWrapper = document.getElementById('dateWrapper');
   if (data.date) {
-    dateEl.textContent = data.date;
+    dateEl.textContent = formatFriendlyDate(data.date);
     dateWrapper.classList.remove('hidden');
   } else {
     dateWrapper.classList.add('hidden');
@@ -417,6 +417,18 @@ function playChime() {
   } catch (e) {
     // Silencio seguro
   }
+}
+
+function formatFriendlyDate(dateStr) {
+  if (!dateStr) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split('-');
+    const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+  }
+  return dateStr;
 }
 
 function handleCopyDetails() {

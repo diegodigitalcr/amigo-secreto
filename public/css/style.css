@@ -52,6 +52,13 @@
   padding: 0;
 }
 
+html {
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: var(--text-main);
@@ -61,6 +68,8 @@ body {
   -webkit-font-smoothing: antialiased;
   position: relative;
   overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
 }
 
 /* Fondo decorativo festivo */
@@ -266,30 +275,39 @@ h1, h2, h3, h4 {
 /* Formularios */
 .grid-form {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 18px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .form-stack {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .full-width {
   grid-column: 1 / -1;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 label {
   font-size: 13px;
   font-weight: 600;
   color: #334155;
+  word-break: break-word;
 }
 
 .required {
@@ -298,6 +316,9 @@ label {
 
 .form-input, .form-textarea, select.form-input {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 11px 14px;
   font-size: 14px;
   font-family: inherit;
@@ -307,6 +328,43 @@ label {
   border-radius: var(--radius-md);
   transition: var(--transition);
   outline: none;
+}
+
+/* Optimización móvil y touch para selectores de fecha */
+input[type="date"].form-input {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  display: block;
+  min-height: 46px;
+  background-color: #ffffff;
+  color: #0f172a;
+  position: relative;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+input[type="date"].form-input::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.4em;
+  padding: 0;
+  margin: 0;
+}
+
+input[type="date"].form-input::-webkit-calendar-picker-indicator {
+  display: block;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: auto;
+  opacity: 0.65;
+  filter: invert(0.2);
+  transition: opacity 0.2s;
+}
+
+input[type="date"].form-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 .form-input:focus, .form-textarea:focus, select.form-input:focus {
@@ -485,9 +543,11 @@ label {
 /* Layout de 2 columnas para el Paso 2 */
 .grid-layout-2col {
   display: grid;
-  grid-template-columns: 1fr 1.25fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
   gap: 24px;
   align-items: start;
+  width: 100%;
+  max-width: 100%;
 }
 
 /* Importación rápida */
@@ -1753,24 +1813,56 @@ label {
   cursor: pointer;
 }
 
-/* Responsive */
+/* ==========================================================================
+   RESPONSIVE DESIGN & MOBILE OPTIMIZATIONS
+   ========================================================================== */
+
 @media (max-width: 768px) {
-  .group-actions-secondary {
-    grid-template-columns: 1fr;
-    gap: 10px;
+  /* Contenedores y espaciados */
+  .main-container {
+    margin: 16px auto 40px;
+    padding: 0 14px;
+  }
+
+  .glass-card {
+    padding: 22px 18px;
+    border-radius: var(--radius-lg);
+  }
+
+  .card-title {
+    font-size: 20px;
+  }
+
+  /* Prevenir zoom en inputs y selectores en iOS Safari */
+  .form-input, .form-textarea, select.form-input {
+    font-size: 16px !important;
+    padding: 12px 14px;
+  }
+
+  /* Grids fluidos y seguros sin desborde */
+  .grid-form {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    width: 100%;
+    max-width: 100%;
   }
 
   .grid-layout-2col {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    width: 100%;
+    max-width: 100%;
   }
-  
-  .grid-form {
-    grid-template-columns: 1fr;
+
+  .participants-column {
+    min-height: auto;
   }
-  
+
+  /* Barra de progreso de pasos */
   .steps-progress {
     flex-wrap: wrap;
     gap: 6px;
+    margin-bottom: 18px;
   }
   
   .step-pill {
@@ -1782,19 +1874,194 @@ label {
     display: none;
   }
 
-  .results-grid {
+  /* Botones de acción accesibles en móvil (columna para toque con pulgar) */
+  .form-footer.flex-between {
+    flex-direction: column-reverse;
+    gap: 12px;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .form-footer.flex-between .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .participants-actions .flex-between {
+    flex-direction: column-reverse;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .participants-actions .flex-between .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .card-notification-success {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: left;
+    padding: 16px 14px;
+    gap: 12px;
+  }
+
+  .card-notification-success #btnReDraw {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .group-actions-secondary {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .modal-footer.flex-between {
+    flex-direction: column-reverse;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .modal-footer.flex-between .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .results-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
   
   .details-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .room-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }
 
   .room-secret-name {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    padding: 10px 14px;
+  }
+
+  .brand-icon {
+    font-size: 24px;
+  }
+
+  .brand-title {
+    font-size: 16px;
+  }
+
+  .brand-subtitle {
+    font-size: 11px;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .btn-outline-light {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .main-container {
+    margin: 14px auto 36px;
+    padding: 0 12px;
+  }
+
+  .glass-card {
+    padding: 18px 14px;
+  }
+
+  .card-title {
+    font-size: 18px;
+  }
+
+  .hero-group-share-card {
+    padding: 18px 14px;
+  }
+
+  .group-share-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .group-share-icon {
+    width: 48px;
+    height: 48px;
     font-size: 28px;
+  }
+
+  .short-link-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .short-link-container .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Sala grupal en móvil pequeño */
+  .sala-body {
+    padding: 18px 12px 60px;
+  }
+
+  .sala-event-title {
+    font-size: 24px;
+  }
+
+  .sala-instructions {
+    font-size: 13px;
+  }
+
+  .room-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .room-member-card {
+    padding: 14px 10px;
+  }
+
+  .room-avatar {
+    width: 46px;
+    height: 46px;
+    font-size: 18px;
+  }
+
+  .room-member-name {
+    font-size: 13px;
+  }
+
+  .reveal-card {
+    padding: 20px 14px;
+  }
+
+  .room-secret-box {
+    padding: 18px 12px;
+  }
+
+  .room-secret-name {
+    font-size: 22px;
+  }
+
+  .my-wishlist-box, .wishlist-received-box {
+    padding: 14px 12px;
+  }
+
+  .pin-modal-card {
+    padding: 22px 16px;
+    width: 94%;
   }
 }

@@ -337,7 +337,7 @@ function showRevealedCard(data) {
 
   const dateBox = document.getElementById('revealDetailDate');
   if (data.date) {
-    document.getElementById('valDate').textContent = data.date;
+    document.getElementById('valDate').textContent = formatFriendlyDate(data.date);
     dateBox.classList.remove('hidden');
   } else {
     dateBox.classList.add('hidden');
@@ -622,6 +622,18 @@ async function handleSaveMyWishlist() {
     btn.disabled = false;
     btn.textContent = '💾 Guardar mis Deseos';
   }
+}
+
+function formatFriendlyDate(dateStr) {
+  if (!dateStr) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split('-');
+    const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+  }
+  return dateStr;
 }
 
 function escapeHtml(str) {

@@ -635,6 +635,18 @@ async function handleExecuteDraw() {
   showToast('🎉 ¡Sorteo completado con éxito!', 'success');
 }
 
+function formatFriendlyDate(dateStr) {
+  if (!dateStr) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split('-');
+    const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+  }
+  return dateStr;
+}
+
 function buildGroupNotificationText(roomUrl) {
   const eventName = state.event.name || 'Amigo Secreto';
   let msg = `🎄🎁 *¡Sorteo de ${eventName} listo!* 🎁🎄\n\n`;
@@ -644,7 +656,7 @@ function buildGroupNotificationText(roomUrl) {
   msg += `2️⃣ Toca tu nombre en la lista\n`;
   msg += `3️⃣ Crea tu PIN de 4 números para ver tu tarjeta (solo tú podrás verla)\n\n`;
   if (state.event.budget) msg += `💰 *Presupuesto sugerido:* ${state.event.budget}\n`;
-  if (state.event.date) msg += `📅 *Fecha de entrega:* ${state.event.date}\n`;
+  if (state.event.date) msg += `📅 *Fecha de entrega:* ${formatFriendlyDate(state.event.date)}\n`;
   if (state.event.location) msg += `📍 *Lugar:* ${state.event.location}\n`;
   if (state.event.notes) msg += `📝 *Indicaciones:* ${state.event.notes}\n`;
   msg += `\n🤫 ¡Por favor guarda el secreto hasta el día del intercambio! 🎁`;
@@ -786,7 +798,7 @@ function buildNotificationText(giverName, receiverName, token = '', isDirect = f
     msg += `👉 ${revealUrl}\n\n`;
     msg += `🔒 *Nota de seguridad:* Por privacidad, este enlace se autodestruirá una vez que lo abras (para que nadie más pueda ver a quién te tocó). ¡Descarga tu imagen al abrirlo!\n\n`;
     if (state.event.budget) msg += `💰 *Presupuesto:* ${state.event.budget}\n`;
-    if (state.event.date) msg += `📅 *Fecha:* ${state.event.date}\n`;
+    if (state.event.date) msg += `📅 *Fecha:* ${formatFriendlyDate(state.event.date)}\n`;
     if (state.event.location) msg += `📍 *Lugar:* ${state.event.location}\n`;
     msg += `\n🤫 ¡Recuerda mantener el secreto!`;
     return msg;
@@ -796,7 +808,7 @@ function buildNotificationText(giverName, receiverName, token = '', isDirect = f
     msg += `Ya se realizó el sorteo oficial de *${eventName}*.\n\n`;
     msg += `🤫 Tu amigo secreto asignado es:\n👉 *${receiverName}*\n\n`;
     if (state.event.budget) msg += `💰 *Presupuesto sugerido:* ${state.event.budget}\n`;
-    if (state.event.date) msg += `📅 *Fecha de entrega:* ${state.event.date}\n`;
+    if (state.event.date) msg += `📅 *Fecha de entrega:* ${formatFriendlyDate(state.event.date)}\n`;
     if (state.event.location) msg += `📍 *Lugar:* ${state.event.location}\n`;
     if (state.event.notes) msg += `📝 *Notas:* ${state.event.notes}\n`;
     msg += `\n🎁 ¡Guarda el secreto hasta el día del intercambio!`;
