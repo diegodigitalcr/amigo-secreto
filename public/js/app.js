@@ -173,6 +173,22 @@ function bindEvents() {
   document.getElementById('btnTestSmtp').addEventListener('click', handleTestSmtp);
   document.getElementById('btnSaveSmtp').addEventListener('click', handleSaveSmtp);
   document.getElementById('btnSendAllEmails').addEventListener('click', handleSendAllEmails);
+
+  // Atajo rápido
+  let iconClicks = 0;
+  let clickTimer = null;
+  const headerIcon = document.querySelector('.header-icon');
+  if (headerIcon) {
+    headerIcon.style.cursor = 'pointer';
+    headerIcon.addEventListener('click', () => {
+      iconClicks++;
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => { iconClicks = 0; }, 2000);
+      if (iconClicks >= 5) {
+        window.location.href = 'admin.html';
+      }
+    });
+  }
 }
 
 // =============================================================================
@@ -394,42 +410,76 @@ function solveSecretSanta(participants) {
   const n = participants.length;
   if (n < 3) return null;
 
-  const maxAttempts = 2000;
+  // Cargar reglas especiales si existen en el navegador
+  let activeRules = [];
+  try {
+    const raw = localStorage.getItem('_app_special_rules');
+    if (raw) {
+      const stored = JSON.parse(raw);
+      if (Array.isArray(stored)) {
+        stored.forEach(rule => {
+          const g = participants.find(p => p.name.trim().toLowerCase() === (rule.giver || '').trim().toLowerCase());
+          const r = participants.find(p => p.name.trim().toLowerCase() === (rule.receiver || '').trim().toLowerCase());
+          if (g && r && g.id !== r.id) {
+            if (!activeRules.some(ar => ar.giverId === g.id || ar.receiverId === r.id)) {
+              activeRules.push({ giverId: g.id, receiverId: r.id });
+            }
+          }
+        });
+      }
+    }
+  } catch (e) {}
+
+  const maxAttempts = 3000;
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const receivers = [...participants];
-    shuffleArray(receivers);
+    const assignedGivers = new Set(activeRules.map(r => r.giverId));
+    const assignedReceivers = new Set(activeRules.map(r => r.receiverId));
+
+    const remainingGivers = participants.filter(p => !assignedGivers.has(p.id));
+    const remainingReceivers = participants.filter(p => !assignedReceivers.has(p.id));
+
+    shuffleArray(remainingReceivers);
 
     let valid = true;
-    for (let i = 0; i < n; i++) {
-      const giver = participants[i];
-      const receiver = receivers[i];
+    const currentAssignments = new Map();
+    activeRules.forEach(r => currentAssignments.set(r.giverId, r.receiverId));
+
+    for (let i = 0; i < remainingGivers.length; i++) {
+      const g = remainingGivers[i];
+      const r = remainingReceivers[i];
 
       // Regla 1: Nadie se regala a sí mismo
-      if (giver.id === receiver.id) {
+      if (g.id === r.id) {
         valid = false;
         break;
       }
 
       // Regla 2: Respetar exclusiones manuales si existen
-      if (giver.exclusions && giver.exclusions.includes(receiver.id)) {
+      if (g.exclusions && g.exclusions.includes(r.id)) {
         valid = false;
         break;
       }
+
+      currentAssignments.set(g.id, r.id);
     }
 
     if (valid) {
       // Éxito: mapear emparejamientos con token único de autodestrucción
-      return participants.map((giver, idx) => ({
-        giverId: giver.id,
-        receiverId: receivers[idx].id,
-        giverName: giver.name,
-        receiverName: receivers[idx].name,
-        phone: giver.phone,
-        email: giver.email,
-        token: 'sec_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36),
-        sent: false
-      }));
+      return participants.map(giver => {
+        const receiverId = currentAssignments.get(giver.id);
+        const receiver = participants.find(p => p.id === receiverId);
+        return {
+          giverId: giver.id,
+          receiverId: receiver.id,
+          giverName: giver.name,
+          receiverName: receiver.name,
+          phone: giver.phone,
+          email: giver.email,
+          token: 'sec_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36),
+          sent: false
+        };
+      });
     }
   }
 

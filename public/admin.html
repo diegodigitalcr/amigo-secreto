@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Configuración | Amigo Secreto</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .admin-container {
+      max-width: 620px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+    .admin-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+    }
+    .rule-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      margin-bottom: 10px;
+    }
+    .rule-names {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .rule-arrow {
+      color: #dc2626;
+      font-size: 18px;
+    }
+    .btn-del-rule {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .btn-del-rule:hover {
+      background: #fecaca;
+      transform: scale(1.1);
+    }
+    .admin-auth-box {
+      max-width: 360px;
+      margin: 80px auto;
+      text-align: center;
+    }
+  </style>
+</head>
+<body class="app-body">
+  <div class="app-background"></div>
+
+  <!-- Pantalla de Acceso -->
+  <div id="authScreen" class="admin-auth-box">
+    <div class="card glass-card">
+      <div style="font-size: 40px; margin-bottom: 12px;">🔐</div>
+      <h2 class="text-xl font-bold mb-1">Acceso de Creador</h2>
+      <p class="text-xs text-muted mb-4">Ingresa la clave maestra para continuar:</p>
+      
+      <form id="formAuth" class="form-stack">
+        <input type="password" id="inputMasterKey" class="form-input text-center" placeholder="Clave maestra..." autocomplete="off" autofocus required>
+        <div id="authError" class="pin-error-msg hidden">Clave incorrecta</div>
+        <button type="submit" class="btn btn-primary btn-block mt-2">Entrar al Panel ➜</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Panel de Control Principal (Visible tras autenticarse) -->
+  <main id="adminPanel" class="admin-container hidden">
+    <div class="admin-card">
+      
+      <div class="flex-between align-center mb-4">
+        <div>
+          <span class="card-badge" style="background:#0f172a; color:#fff;">⚙️ Administración</span>
+          <h1 class="card-title text-2xl mt-1">Configuración Avanzada</h1>
+        </div>
+        <a href="index.html" class="btn btn-outline-sm">⬅ Volver al Inicio</a>
+      </div>
+
+      <p class="card-desc mb-4">
+        Configura emparejamientos obligatorios. El algoritmo garantizará que a la persona <strong>X</strong> siempre le toque la persona <strong>Y</strong>, mientras que al resto de participantes los sorteará de forma aleatoria y justa.
+      </p>
+
+      <!-- Formulario para Añadir Regla -->
+      <form id="formAddRule" class="card" style="background:#f1f5f9; padding: 20px; border-radius: var(--radius-lg); margin-bottom: 24px;">
+        <h3 class="text-sm font-bold mb-3 uppercase text-muted">Añadir Nueva Asignación</h3>
+        <div class="grid-form" style="grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label for="ruleGiver">Persona que regala:</label>
+            <input type="text" id="ruleGiver" class="form-input" placeholder="Ej: Diego" required autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="ruleReceiver">Le debe salir (Recibe):</label>
+            <input type="text" id="ruleReceiver" class="form-input" placeholder="Ej: Michelle" required autocomplete="off">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block mt-3">
+          ➕ Guardar Regla Forzada
+        </button>
+      </form>
+
+      <!-- Lista de Reglas Activas -->
+      <div class="mb-4">
+        <div class="flex-between align-center mb-2">
+          <h3 class="text-sm font-bold uppercase text-muted">Reglas Activas (<span id="rulesCount">0</span>)</h3>
+          <button type="button" id="btnClearAllRules" class="btn-text-danger text-xs">Borrar Todas</button>
+        </div>
+
+        <div id="rulesListContainer">
+          <!-- Render dinámico -->
+        </div>
+      </div>
+
+      <div class="text-xs text-muted" style="border-top: 1px solid #e2e8f0; padding-top: 16px;">
+        💡 <strong>Nota:</strong> Estas reglas quedan activas en tu navegador. Cuando hagas el sorteo en la página principal, el algoritmo las aplicará de forma silenciosa e imperceptible.
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>
