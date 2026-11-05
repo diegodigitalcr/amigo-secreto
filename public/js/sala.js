@@ -264,7 +264,7 @@ async function handleSubmitPin() {
 
       revealedData = {
         to: rawMember.name,
-        secret: rawMember.secretFriend,
+        secret: rawMember.secret || rawMember.secretFriend,
         event: roomData.event?.name || 'Amigo Invisible',
         budget: roomData.event?.budget || '',
         date: roomData.event?.date || '',
