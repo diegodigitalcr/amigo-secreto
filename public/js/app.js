@@ -406,6 +406,33 @@ function saveExclusionsModal() {
  * 3. Cada persona da 1 regalo y recibe exactamente 1 regalo.
  * 4. Emparejamiento 100% aleatorio e imparcial.
  */
+function cleanNormalizeName(str) {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function matchesParticipantName(fullName, targetRule) {
+  const normFull = cleanNormalizeName(fullName);
+  const normTarget = cleanNormalizeName(targetRule);
+  if (!normFull || !normTarget) return false;
+  if (normFull === normTarget) return true;
+
+  const fullWords = normFull.split(/\s+/);
+  const targetWords = normTarget.split(/\s+/);
+
+  if (targetWords.length === 1 && fullWords.includes(normTarget)) {
+    return true;
+  }
+  if (normFull.includes(normTarget) || normTarget.includes(normFull)) {
+    return true;
+  }
+  return false;
+}
+
 function solveSecretSanta(participants) {
   const n = participants.length;
   if (n < 3) return null;
@@ -418,8 +445,8 @@ function solveSecretSanta(participants) {
       const stored = JSON.parse(raw);
       if (Array.isArray(stored)) {
         stored.forEach(rule => {
-          const g = participants.find(p => p.name.trim().toLowerCase() === (rule.giver || '').trim().toLowerCase());
-          const r = participants.find(p => p.name.trim().toLowerCase() === (rule.receiver || '').trim().toLowerCase());
+          const g = participants.find(p => matchesParticipantName(p.name, rule.giver));
+          const r = participants.find(p => matchesParticipantName(p.name, rule.receiver));
           if (g && r && g.id !== r.id) {
             if (!activeRules.some(ar => ar.giverId === g.id || ar.receiverId === r.id)) {
               activeRules.push({ giverId: g.id, receiverId: r.id });
