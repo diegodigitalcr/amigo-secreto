@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amigo Secreto 🎁 | Sala Grupal</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+</head>
+<body class="sala-body">
+  <div class="app-background"></div>
+
+  <!-- Contenedor Principal de la Sala -->
+  <main class="sala-container">
+    
+    <!-- Encabezado de la Sala -->
+    <header class="sala-header text-center">
+      <div class="card-badge">🎁 SALA DEL AMIGO SECRETO</div>
+      <h1 class="sala-event-title" id="roomEventTitle">Cargando Sorteo...</h1>
+      
+      <!-- Barra de detalles del intercambio -->
+      <div id="roomMetaBar" class="room-meta-bar flex-center gap-2 flex-wrap">
+        <span class="meta-item" id="roomBudget" style="display: none;">💰 Presupuesto: <strong></strong></span>
+        <span class="meta-item" id="roomDate" style="display: none;">📅 Fecha: <strong></strong></span>
+        <span class="meta-item" id="roomLocation" style="display: none;">📍 Lugar: <strong></strong></span>
+      </div>
+
+      <p class="sala-instructions">
+        👇 Busca y <strong>toca tu nombre</strong> para descubrir a quién te tocó regalarle:
+      </p>
+    </header>
+
+    <!-- Estado de Error si no encuentra la sala -->
+    <div id="roomErrorBox" class="card glass-card text-center hidden">
+      <div class="emoji-large">🔍</div>
+      <h2>Enlace de sala no encontrado</h2>
+      <p class="text-muted mt-2">No pudimos cargar los participantes de este sorteo. Por favor solicita al organizador que vuelva a compartir el enlace del grupo.</p>
+    </div>
+
+    <!-- Cuadrícula de Participantes de la Sala -->
+    <div id="roomParticipantsGrid" class="room-grid">
+      <!-- Se llena dinámicamente con las tarjetas de cada participante -->
+    </div>
+
+    <!-- Vista de Revelación Individual (Visible tras ingresar PIN correcto) -->
+    <div id="roomRevealView" class="hidden">
+      
+      <div class="reveal-card card glass-card">
+        <div class="flex-between mb-3">
+          <button type="button" id="btnBackToRoom" class="btn btn-outline-sm">
+            ⬅ Volver a la Sala
+          </button>
+          <span class="card-badge">🔒 Tarjeta Protegida</span>
+        </div>
+
+        <div class="text-center">
+          <h2 class="reveal-greeting">¡Hola, <span id="revealedRecipientName" class="highlight-text">Participante</span>!</h2>
+          <p class="text-muted text-sm mt-1">Tu amigo secreto asignado es:</p>
+        </div>
+
+        <!-- Tarjeta de Amigo Secreto Revelado -->
+        <div class="room-secret-box">
+          <div class="room-secret-badge">🎁 TU AMIGO SECRETO ES:</div>
+          <div class="room-secret-name" id="revealedSecretName">Nombre</div>
+          <p class="room-secret-sub">🤫 ¡Recuerda guardar el secreto hasta el día del intercambio!</p>
+        </div>
+
+        <!-- Detalles del Intercambio -->
+        <div id="roomEventDetailsBox" class="event-details-card">
+          <h3 class="details-heading">📋 Información del Intercambio</h3>
+          <div class="details-grid">
+            <div class="detail-item" id="revealDetailBudget">
+              <span class="item-icon">💰</span>
+              <div>
+                <div class="item-label">Presupuesto sugerido</div>
+                <div class="item-value" id="valBudget">-</div>
+              </div>
+            </div>
+            <div class="detail-item" id="revealDetailDate">
+              <span class="item-icon">📅</span>
+              <div>
+                <div class="item-label">Fecha de entrega</div>
+                <div class="item-value" id="valDate">-</div>
+              </div>
+            </div>
+            <div class="detail-item full-width" id="revealDetailLocation">
+              <span class="item-icon">📍</span>
+              <div>
+                <div class="item-label">Lugar</div>
+                <div class="item-value" id="valLocation">-</div>
+              </div>
+            </div>
+            <div class="detail-item full-width" id="revealDetailNotes">
+              <span class="item-icon">📝</span>
+              <div>
+                <div class="item-label">Indicaciones</div>
+                <div class="item-value" id="valNotes">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="text-center mt-3">
+          <button type="button" id="btnDownloadRoomImage" class="btn btn-celebrate btn-lg btn-block pulse-btn">
+            📸 Guardar Tarjeta como Imagen (PNG)
+          </button>
+          <small class="text-muted mt-2 d-block">Guarda tu comprobante en tus fotos antes de cerrar</small>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ============================================== -->
+  <!-- MODAL PARA INGRESAR O CREAR PIN PRIVADO -->
+  <!-- ============================================== -->
+  <div id="modalPin" class="modal-overlay hidden">
+    <div class="modal-card modal-pin-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalPinTitle">🔐 Proteger tu Tarjeta</h3>
+        <button type="button" class="btn-close-modal" id="btnClosePinModal">&times;</button>
+      </div>
+
+      <div class="modal-body text-center">
+        <div class="participant-avatar-large mx-auto mb-2" id="modalParticipantAvatar">C</div>
+        <h4 id="modalParticipantName" class="text-lg font-bold mb-1">Nombre</h4>
+        
+        <p id="modalPinInstructions" class="text-sm text-muted mb-3">
+          Crea un PIN de 4 números para que solo tú puedas ver tu tarjeta secreta:
+        </p>
+
+        <!-- Campo de entrada del PIN -->
+        <div class="pin-input-wrapper">
+          <input type="password" id="inputPinCode" class="pin-input" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="••••" autocomplete="off" autofocus>
+        </div>
+
+        <div id="modalPinError" class="pin-error-msg hidden">
+          PIN incorrecto. Intenta nuevamente.
+        </div>
+      </div>
+
+      <div class="modal-footer flex-center">
+        <button type="button" id="btnSubmitPin" class="btn btn-primary btn-block btn-lg">
+          Desbloquear Tarjeta 🎁
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/sala.js?v=1"></script>
+</body>
+</html>

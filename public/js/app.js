@@ -17,6 +17,9 @@ const state = {
   preferences: {
     useRevealLinks: true
   },
+  roomId: null,
+  groupRoomUrl: '',
+  groupRoomText: '',
   smtpConfig: null,
   showOrganizerView: false
 };
@@ -44,6 +47,9 @@ function saveToLocalStorage() {
       participants: state.participants,
       results: state.results,
       preferences: state.preferences,
+      roomId: state.roomId,
+      groupRoomUrl: state.groupRoomUrl,
+      groupRoomText: state.groupRoomText,
       smtpConfig: state.smtpConfig
     }));
   } catch (e) {
@@ -60,6 +66,9 @@ function loadFromLocalStorage() {
     if (Array.isArray(parsed.participants)) state.participants = parsed.participants;
     if (Array.isArray(parsed.results)) state.results = parsed.results;
     if (parsed.preferences) state.preferences = { ...state.preferences, ...parsed.preferences };
+    if (parsed.roomId) state.roomId = parsed.roomId;
+    if (parsed.groupRoomUrl) state.groupRoomUrl = parsed.groupRoomUrl;
+    if (parsed.groupRoomText) state.groupRoomText = parsed.groupRoomText;
     if (parsed.smtpConfig) state.smtpConfig = parsed.smtpConfig;
     if (parsed.step) state.step = parsed.step;
   } catch (e) {
@@ -126,6 +135,12 @@ function bindEvents() {
   document.getElementById('btnExecuteDraw').addEventListener('click', handleExecuteDraw);
   document.getElementById('btnReDraw').addEventListener('click', handleExecuteDraw);
 
+  // Botón Copiar Mensaje del Grupo WhatsApp
+  const btnCopyGroup = document.getElementById('btnCopyGroupMessage');
+  if (btnCopyGroup) {
+    btnCopyGroup.addEventListener('click', handleCopyGroupMessage);
+  }
+
   // Visibilidad del organizador (spoiler)
   document.getElementById('btnToggleOrganizerView').addEventListener('click', () => {
     state.showOrganizerView = !state.showOrganizerView;
@@ -179,6 +194,7 @@ function goToStep(stepNumber) {
     if (state.results.length > 0) {
       document.getElementById('drawTriggerBanner').classList.add('hidden');
       document.getElementById('drawResultsContainer').classList.remove('hidden');
+      renderGroupShareHeroCard();
       renderResultsCards();
     } else {
       document.getElementById('drawTriggerBanner').classList.remove('hidden');
@@ -428,7 +444,6 @@ async function handleExecuteDraw() {
   }
 
   state.results = results;
-  saveToLocalStorage();
 
   // Registrar los secretos en el servidor para permitir autodestrucción remota
   try {
@@ -452,8 +467,63 @@ async function handleExecuteDraw() {
       body: JSON.stringify({ secrets: secretsPayload })
     });
   } catch (err) {
-    console.warn('Servidor local no disponible para registrar secretos remotos (funcionando en modo autónomo):', err);
+    console.warn('Servidor local no disponible para registrar secretos remotos (modo autónomo):', err);
   }
+
+  // Crear la Sala Grupal con PIN
+  let roomId = 'sala_' + Math.random().toString(36).substr(2, 7);
+  try {
+    const roomRes = await fetch('/api/rooms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventDetails: {
+          name: state.event.name,
+          budget: state.event.budget || '',
+          date: state.event.date || '',
+          location: state.event.location || '',
+          notes: state.event.notes || ''
+        },
+        pairings: results.map(r => ({
+          giverId: r.giverId,
+          giverName: r.giverName,
+          receiverName: r.receiverName
+        }))
+      })
+    });
+    if (roomRes.ok) {
+      const roomJson = await roomRes.json();
+      if (roomJson.roomId) {
+        roomId = roomJson.roomId;
+      }
+    }
+  } catch (roomErr) {
+    console.warn('Servidor local no disponible para sala, usando identificador local:', roomErr);
+  }
+
+  state.roomId = roomId;
+
+  // Respaldo codificado en hash para compatibilidad con hosting estático (Netlify)
+  const encodedRoom = encodePayload({
+    id: roomId,
+    event: {
+      name: state.event.name,
+      budget: state.event.budget || '',
+      date: state.event.date || '',
+      location: state.event.location || '',
+      notes: state.event.notes || ''
+    },
+    members: results.map(r => ({
+      id: r.giverId,
+      name: r.giverName,
+      secret: r.receiverName
+    }))
+  });
+
+  state.groupRoomUrl = `${window.location.origin}/sala.html?id=${roomId}#room=${encodedRoom}`;
+  state.groupRoomText = buildGroupNotificationText(state.groupRoomUrl);
+
+  saveToLocalStorage();
 
   // Disparar celebración con confeti
   triggerConfetti();
@@ -462,8 +532,66 @@ async function handleExecuteDraw() {
   document.getElementById('drawTriggerBanner').classList.add('hidden');
   document.getElementById('drawResultsContainer').classList.remove('hidden');
 
+  renderGroupShareHeroCard();
   renderResultsCards();
   showToast('🎉 ¡Sorteo completado con éxito!', 'success');
+}
+
+function buildGroupNotificationText(roomUrl) {
+  const eventName = state.event.name || 'Amigo Secreto';
+  let msg = `🎄🎁 *¡Sorteo de ${eventName} listo!* 🎁🎄\n\n`;
+  msg += `¡Ya se realizó el sorteo oficial!\n`;
+  msg += `Para descubrir a quién te tocó regalarle de forma 100% privada:\n\n`;
+  msg += `1️⃣ Entra a este enlace: 👉 ${roomUrl}\n`;
+  msg += `2️⃣ Toca tu nombre en la lista\n`;
+  msg += `3️⃣ Crea tu PIN de 4 números para ver tu tarjeta (solo tú podrás verla)\n\n`;
+  if (state.event.budget) msg += `💰 *Presupuesto sugerido:* ${state.event.budget}\n`;
+  if (state.event.date) msg += `📅 *Fecha de entrega:* ${state.event.date}\n`;
+  if (state.event.location) msg += `📍 *Lugar:* ${state.event.location}\n`;
+  if (state.event.notes) msg += `📝 *Indicaciones:* ${state.event.notes}\n`;
+  msg += `\n🤫 ¡Por favor guarda el secreto hasta el día del intercambio! 🎁`;
+  return msg;
+}
+
+function renderGroupShareHeroCard() {
+  if (!state.groupRoomUrl && state.results.length > 0) {
+    const encodedRoom = encodePayload({
+      id: state.roomId || 'sala_local',
+      event: state.event,
+      members: state.results.map(r => ({
+        id: r.giverId,
+        name: r.giverName,
+        secret: r.receiverName
+      }))
+    });
+    state.groupRoomUrl = `${window.location.origin}/sala.html?id=${state.roomId || 'sala_local'}#room=${encodedRoom}`;
+    state.groupRoomText = buildGroupNotificationText(state.groupRoomUrl);
+  }
+
+  const btnShareWA = document.getElementById('btnShareGroupWhatsApp');
+  const btnOpenRoom = document.getElementById('btnOpenRoomPreview');
+  const previewBox = document.getElementById('groupMessagePreview');
+
+  if (previewBox && state.groupRoomText) {
+    previewBox.textContent = state.groupRoomText;
+  }
+
+  if (btnShareWA && state.groupRoomText) {
+    btnShareWA.href = `https://wa.me/?text=${encodeURIComponent(state.groupRoomText)}`;
+  }
+
+  if (btnOpenRoom && state.groupRoomUrl) {
+    btnOpenRoom.href = state.groupRoomUrl;
+  }
+}
+
+function handleCopyGroupMessage() {
+  if (!state.groupRoomText) return;
+  navigator.clipboard.writeText(state.groupRoomText).then(() => {
+    showToast('📋 ¡Mensaje del grupo copiado! Pégalo en tu grupo de WhatsApp.', 'success');
+  }).catch(() => {
+    showToast('No se pudo copiar automáticamente al portapapeles.', 'error');
+  });
 }
 
 function triggerConfetti() {
@@ -954,6 +1082,9 @@ function handleNewGame() {
   };
   state.participants = [];
   state.results = [];
+  state.roomId = null;
+  state.groupRoomUrl = '';
+  state.groupRoomText = '';
   
   renderAll();
   showToast('Se ha iniciado un nuevo sorteo desde cero.', 'success');

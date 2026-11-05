@@ -1377,6 +1377,267 @@ label {
   }
 }
 
+/* ==========================================================================
+   ESTILOS DE LA SALA GRUPAL CON PIN PRIVADO (sala.html)
+   ========================================================================== */
+.sala-body {
+  min-height: 100vh;
+  padding: 30px 16px 80px;
+}
+
+.sala-container {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.sala-header {
+  margin-bottom: 28px;
+}
+
+.sala-event-title {
+  font-size: 32px;
+  font-weight: 900;
+  margin: 10px 0 12px;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.15;
+}
+
+.room-meta-bar {
+  margin-bottom: 16px;
+}
+
+.meta-item {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  color: #334155;
+  box-shadow: var(--shadow-sm);
+}
+
+.sala-instructions {
+  font-size: 15px;
+  color: #475569;
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+/* Cuadrícula de miembros en la sala */
+.room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.room-member-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-md);
+  user-select: none;
+}
+
+.room-member-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--shadow-xl);
+  border-color: #f87171;
+}
+
+.room-member-card:active {
+  transform: scale(0.98);
+}
+
+.room-member-card.has-pin {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.member-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 900;
+  margin-bottom: 12px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.room-member-card.has-pin .member-avatar {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.member-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.member-status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.member-status-pill.status-ready {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.member-status-pill.status-locked {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Modal del PIN */
+.modal-pin-card {
+  max-width: 380px;
+}
+
+.pin-input-wrapper {
+  margin: 18px 0;
+}
+
+.pin-input {
+  width: 180px;
+  font-size: 32px;
+  font-weight: 900;
+  text-align: center;
+  letter-spacing: 12px;
+  padding: 10px 14px;
+  border: 2.5px solid var(--border);
+  border-radius: var(--radius-md);
+  outline: none;
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+.pin-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15);
+}
+
+.pin-error-msg {
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 8px;
+  animation: shake 0.4s ease;
+}
+
+/* Tarjeta revelada en sala */
+.room-secret-box {
+  background: linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%);
+  border: 2.5px dashed #f87171;
+  border-radius: var(--radius-xl);
+  padding: 28px 20px;
+  text-align: center;
+  margin: 24px 0;
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.1);
+}
+
+.room-secret-badge {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #991b1b;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.room-secret-name {
+  font-size: 38px;
+  font-weight: 900;
+  color: #b91c1c;
+  line-height: 1.1;
+  text-shadow: 0 2px 10px rgba(185, 28, 28, 0.15);
+}
+
+.room-secret-sub {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 10px;
+}
+
+/* Tarjeta destacada de compartir en grupo para el organizador (index.html) */
+.hero-group-share-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  border: 2px solid #86efac;
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 25px rgba(22, 101, 52, 0.08);
+}
+
+.group-share-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.group-share-icon {
+  font-size: 44px;
+  background: #dcfce7;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.group-message-preview {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  font-size: 13px;
+  color: #334155;
+  white-space: pre-wrap;
+  margin: 16px 0;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+.btn-whatsapp-group {
+  background: #25D366;
+  color: #ffffff;
+  font-size: 16px;
+  padding: 14px 28px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.35);
+  font-weight: 800;
+}
+
+.btn-whatsapp-group:hover {
+  background: #1eb857;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .grid-layout-2col {
@@ -1407,5 +1668,13 @@ label {
   
   .details-grid {
     grid-template-columns: 1fr;
+  }
+
+  .room-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .room-secret-name {
+    font-size: 28px;
   }
 }

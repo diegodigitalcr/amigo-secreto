@@ -123,6 +123,141 @@ app.post('/api/secrets/:token/burn', (req, res) => {
   });
 });
 
+// =============================================================================
+// SALAS GRUPALES CON PIN SECRETO (Un solo enlace para el grupo de WhatsApp)
+// =============================================================================
+const roomsStore = new Map();
+const ROOMS_FILE = path.join(DATA_DIR, 'rooms.json');
+
+// Cargar salas existentes
+if (fs.existsSync(ROOMS_FILE)) {
+  try {
+    const raw = fs.readFileSync(ROOMS_FILE, 'utf-8');
+    const items = JSON.parse(raw);
+    Object.entries(items).forEach(([k, v]) => roomsStore.set(k, v));
+  } catch (e) {
+    console.warn('No se pudieron leer salas anteriores:', e.message);
+  }
+}
+
+function persistRooms() {
+  try {
+    const obj = Object.fromEntries(roomsStore);
+    fs.writeFileSync(ROOMS_FILE, JSON.stringify(obj, null, 2), 'utf-8');
+  } catch (e) {
+    console.error('Error persistiendo salas:', e.message);
+  }
+}
+
+// Crear sala grupal
+app.post('/api/rooms', (req, res) => {
+  const { eventDetails, pairings } = req.body;
+  if (!pairings || !Array.isArray(pairings) || pairings.length < 3) {
+    return res.status(400).json({ error: 'Lista de participantes insuficiente' });
+  }
+
+  // Generar ID único corto y amigable para la sala
+  const roomId = 'sala_' + Math.random().toString(36).substr(2, 7);
+
+  // Mapear emparejamientos con PIN inicialmente nulo
+  const roomData = {
+    id: roomId,
+    event: eventDetails || {},
+    createdAt: new Date().toISOString(),
+    members: pairings.map(p => ({
+      id: p.giverId || ('m_' + Math.random().toString(36).substr(2, 6)),
+      name: p.giverName,
+      secretFriend: p.receiverName,
+      pin: null, // Se asigna la primera vez que la persona entra
+      openedAt: null
+    }))
+  };
+
+  roomsStore.set(roomId, roomData);
+  persistRooms();
+
+  res.json({ success: true, roomId });
+});
+
+// Obtener información pública de la sala (¡SIN exponer el amigo secreto!)
+app.get('/api/rooms/:id', (req, res) => {
+  const { id } = req.params;
+  const room = roomsStore.get(id);
+
+  if (!room) {
+    return res.status(404).json({ success: false, error: 'Sala no encontrada' });
+  }
+
+  // Devolver solo la lista pública: nombres y si ya tienen PIN creado (¡SIN el amigo secreto!)
+  res.json({
+    success: true,
+    room: {
+      id: room.id,
+      event: room.event,
+      participants: room.members.map(m => ({
+        id: m.id,
+        name: m.name,
+        hasPin: Boolean(m.pin)
+      }))
+    }
+  });
+});
+
+// Desbloquear tarjeta con PIN
+app.post('/api/rooms/:id/unlock', (req, res) => {
+  const { id } = req.params;
+  const { memberId, name, pin } = req.body;
+  const room = roomsStore.get(id);
+
+  if (!room) {
+    return res.status(404).json({ success: false, error: 'Sala no encontrada' });
+  }
+
+  const cleanPin = (pin || '').toString().trim();
+  if (!cleanPin || cleanPin.length < 4) {
+    return res.status(400).json({ success: false, error: 'El PIN debe tener 4 dígitos numéricos' });
+  }
+
+  // Buscar al miembro por ID o por nombre
+  const member = room.members.find(m => (memberId && m.id === memberId) || (m.name.toLowerCase() === (name || '').toLowerCase()));
+  if (!member) {
+    return res.status(404).json({ success: false, error: 'Participante no encontrado en la sala' });
+  }
+
+  // Caso 1: Primera vez que entra (Crear PIN)
+  if (!member.pin) {
+    member.pin = cleanPin;
+    member.openedAt = new Date().toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
+    persistRooms();
+
+    return res.json({
+      success: true,
+      isNewPin: true,
+      to: member.name,
+      secret: member.secretFriend,
+      event: room.event,
+      message: '¡PIN creado con éxito! Tu tarjeta ahora está protegida.'
+    });
+  }
+
+  // Caso 2: Ya tenía PIN (Validar PIN)
+  if (member.pin !== cleanPin) {
+    return res.status(401).json({
+      success: false,
+      error: 'PIN incorrecto. Ingresa el PIN que creaste la primera vez.'
+    });
+  }
+
+  // PIN correcto: entregar datos
+  res.json({
+    success: true,
+    isNewPin: false,
+    to: member.name,
+    secret: member.secretFriend,
+    event: room.event
+  });
+});
+
 // Helper para crear transporter de Nodemailer
 function createTransporter(smtpConfig) {
   if (!smtpConfig || !smtpConfig.user || !smtpConfig.pass) {

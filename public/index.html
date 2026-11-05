@@ -116,40 +116,46 @@
           <div class="card-header">
             <div class="card-badge">Paso 2 de 3</div>
             <h2 class="card-title">Añadir Participante</h2>
-            <p class="card-desc">Indica el teléfono con código de país para WhatsApp o su correo electrónico.</p>
+            <p class="card-desc">Escribe el nombre y presiona Enter o Añadir. ¡No necesitas pedir teléfonos ni correos!</p>
           </div>
 
           <form id="formAddParticipant" class="form-stack">
             <div class="form-group">
               <label for="partName">Nombre del participante <span class="required">*</span></label>
-              <input type="text" id="partName" class="form-input" placeholder="Ej: María Gómez" required autocomplete="off">
-            </div>
-
-            <div class="form-group">
-              <label for="partPhone">📲 Teléfono WhatsApp (con código de país)</label>
-              <div class="input-with-hint">
-                <input type="tel" id="partPhone" class="form-input" placeholder="Ej: +50688889999 o +34600112233">
-                <small class="form-hint">Incluye el '+' y código internacional (ej: +506 Costa Rica, +52 México, +34 España, +1 USA/Canadá).</small>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="partEmail">✉️ Correo electrónico</label>
-              <input type="email" id="partEmail" class="form-input" placeholder="ejemplo@correo.com">
+              <input type="text" id="partName" class="form-input" placeholder="Ej: María Gómez" required autocomplete="off" autofocus>
             </div>
 
             <button type="submit" class="btn btn-secondary btn-block">
               ➕ Añadir a la Lista
             </button>
+
+            <!-- Datos de contacto opcionales -->
+            <details class="optional-contact-details mt-2">
+              <summary class="text-xs text-muted cursor-pointer">➕ Opcional: Añadir teléfono o correo si deseas enviar individualmente</summary>
+              <div class="pt-3">
+                <div class="form-group">
+                  <label for="partPhone">📲 Teléfono WhatsApp (opcional)</label>
+                  <div class="input-with-hint">
+                    <input type="tel" id="partPhone" class="form-input" placeholder="Ej: +50688889999 o +34600112233">
+                    <small class="form-hint">Con código de país (ej: +506, +52, +34, +1).</small>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="partEmail">✉️ Correo electrónico (opcional)</label>
+                  <input type="email" id="partEmail" class="form-input" placeholder="ejemplo@correo.com">
+                </div>
+              </div>
+            </details>
           </form>
 
           <!-- Importación rápida -->
           <div class="quick-import-box">
             <details>
-              <summary>📋 <strong>¿Tienes una lista en Excel o texto? Pégala aquí</strong></summary>
+              <summary>📋 <strong>¿Tienes una lista de nombres? Pégala aquí</strong></summary>
               <div class="import-content">
-                <p class="text-sm text-muted">Pega una persona por línea en formato:<br><code>Nombre, Teléfono, Correo</code></p>
-                <textarea id="bulkImportText" class="form-textarea text-sm" rows="3" placeholder="Carlos, +50688881111, carlos@mail.com&#10;Lucía, +50688882222, lucia@mail.com"></textarea>
+                <p class="text-sm text-muted">Pega un nombre por línea (ej: Carlos, Sofía, Diego) o con datos: <code>Nombre, Teléfono, Correo</code></p>
+                <textarea id="bulkImportText" class="form-textarea text-sm" rows="3" placeholder="Carlos&#10;Sofía&#10;Diego&#10;Michelle"></textarea>
                 <button type="button" id="btnBulkImport" class="btn btn-outline-sm mt-2">Importar lista</button>
               </div>
             </details>
@@ -221,48 +227,88 @@
           <div class="success-icon">🎉</div>
           <div class="success-text">
             <h3>¡Sorteo realizado con éxito!</h3>
-            <p>Ahora puedes notificar a cada persona por WhatsApp o Correo. Por privacidad, los nombres están protegidos para que no te arruines la sorpresa si tú también juegas.</p>
+            <p>Ya está lista la sala privada con todos los emparejamientos secretos. Comparte el enlace con tu grupo a continuación.</p>
           </div>
           <button id="btnReDraw" class="btn btn-outline-sm" title="Rehacer el sorteo con nuevos emparejamientos">
             🔄 Repetir Sorteo
           </button>
         </div>
 
-        <!-- Barra de herramientas: Envíos masivos y configuración -->
-        <div class="toolbar-card card glass-card">
-          <div class="toolbar-header">
+        <!-- Tarjeta Principal: Compartir 1 solo enlace en el Grupo de WhatsApp -->
+        <div id="heroGroupShareCard" class="hero-group-share-card">
+          <div class="group-share-header">
+            <div class="group-share-icon">📲</div>
             <div>
-              <h3 class="toolbar-title">Centro de Notificaciones</h3>
-              <p class="text-sm text-muted">Progreso: <span id="sentProgressCount">0</span> de <span id="totalDrawCount">0</span> notificados</p>
-            </div>
-            <div class="toolbar-tools">
-              <!-- Botón para mostrar u ocultar la vista del organizador -->
-              <button type="button" id="btnToggleOrganizerView" class="btn btn-outline-sm">
-                👁️ <span id="organizerViewText">Ver quién le tocó a quién</span>
-              </button>
-              
-              <!-- Botón para configurar servidor de correo automático -->
-              <button type="button" id="btnOpenSmtpModal" class="btn btn-outline-sm">
-                ⚙️ Configurar Correo Automático
-              </button>
-              
-              <!-- Botón para envío masivo por correo -->
-              <button type="button" id="btnSendAllEmails" class="btn btn-secondary-sm">
-                ✉️ Enviar a todos por Correo
-              </button>
+              <span class="card-badge" style="background:#16a34a; color:#ffffff; font-weight:700;">⭐ MÉTODO RECOMENDADO</span>
+              <h3 class="card-title text-xl mt-1">¡Comparte 1 solo enlace en tu Grupo de WhatsApp!</h3>
+              <p class="card-desc">No necesitas enviar mensajes persona por persona ni pedir correos. Cada participante abre el enlace, toca su nombre y crea un <strong>PIN personal de 4 dígitos</strong> para ver a su amigo secreto con total privacidad.</p>
             </div>
           </div>
-          
-          <!-- Barra de progreso visual -->
-          <div class="progress-bar-track">
-            <div id="progressBarFill" class="progress-bar-fill" style="width: 0%"></div>
+
+          <div class="group-actions flex-wrap gap-2 mb-3">
+            <a id="btnShareGroupWhatsApp" href="#" target="_blank" class="btn btn-whatsapp-group flex-center gap-2">
+              <span>📲</span> Enviar al Grupo de WhatsApp
+            </a>
+            <button type="button" id="btnCopyGroupMessage" class="btn btn-secondary flex-center gap-2">
+              <span>📋</span> Copiar Mensaje del Grupo
+            </button>
+            <a id="btnOpenRoomPreview" href="#" target="_blank" class="btn btn-outline flex-center gap-2">
+              <span>👀</span> Abrir Sala como Participante
+            </a>
+          </div>
+
+          <!-- Mensaje listo para enviar -->
+          <label class="text-xs font-bold text-muted uppercase">Vista previa del mensaje para el grupo:</label>
+          <div id="groupMessagePreview" class="group-message-preview">
+            Cargando mensaje del grupo...
           </div>
         </div>
 
-        <!-- Lista de tarjetas de envío individual -->
-        <div id="resultsCardsGrid" class="results-grid">
-          <!-- Renderizado dinámico de tarjetas con botones WhatsApp y Correo -->
-        </div>
+        <!-- Sección Secundaria: Envíos individuales persona por persona (Opcional) -->
+        <details class="card glass-card secondary-tools-accordion" style="margin-top: 20px;">
+          <summary class="cursor-pointer font-bold flex-between align-center" style="padding: 6px 4px;">
+            <span>⚙️ ¿Prefieres enviar tarjetas individuales uno a uno o por correo?</span>
+            <span class="text-sm text-muted">Ver opciones ▾</span>
+          </summary>
+
+          <div style="margin-top: 16px;">
+            <!-- Barra de herramientas: Envíos masivos y configuración -->
+            <div class="toolbar-card card" style="background: rgba(248, 250, 252, 0.8); margin-bottom: 16px;">
+              <div class="toolbar-header">
+                <div>
+                  <h3 class="toolbar-title">Centro de Envíos Individuales</h3>
+                  <p class="text-sm text-muted">Progreso: <span id="sentProgressCount">0</span> de <span id="totalDrawCount">0</span> notificados</p>
+                </div>
+                <div class="toolbar-tools">
+                  <!-- Botón para mostrar u ocultar la vista del organizador -->
+                  <button type="button" id="btnToggleOrganizerView" class="btn btn-outline-sm">
+                    👁️ <span id="organizerViewText">Ver quién le tocó a quién</span>
+                  </button>
+                  
+                  <!-- Botón para configurar servidor de correo automático -->
+                  <button type="button" id="btnOpenSmtpModal" class="btn btn-outline-sm">
+                    ⚙️ Configurar Correo Automático
+                  </button>
+                  
+                  <!-- Botón para envío masivo por correo -->
+                  <button type="button" id="btnSendAllEmails" class="btn btn-secondary-sm">
+                    ✉️ Enviar a todos por Correo
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Barra de progreso visual -->
+              <div class="progress-bar-track">
+                <div id="progressBarFill" class="progress-bar-fill" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- Lista de tarjetas de envío individual -->
+            <div id="resultsCardsGrid" class="results-grid">
+              <!-- Renderizado dinámico de tarjetas con botones WhatsApp y Correo -->
+            </div>
+          </div>
+        </details>
 
       </div>
     </section>
