@@ -254,16 +254,19 @@
             </button>
           </div>
 
-          <div class="group-actions flex-wrap gap-2 mb-3">
-            <a id="btnShareGroupWhatsApp" href="#" target="_blank" class="btn btn-whatsapp-group flex-center gap-2">
-              <span>📲</span> Enviar al Grupo de WhatsApp
+          <div class="group-actions">
+            <a id="btnShareGroupWhatsApp" href="#" target="_blank" class="btn-whatsapp-group">
+              <span style="font-size: 20px;">📲</span>
+              <span>Enviar al Grupo de WhatsApp</span>
             </a>
-            <button type="button" id="btnCopyGroupMessage" class="btn btn-secondary flex-center gap-2">
-              <span>📋</span> Copiar Mensaje Completo
-            </button>
-            <a id="btnOpenRoomPreview" href="#" target="_blank" class="btn btn-outline flex-center gap-2">
-              <span>👀</span> Probar Sala
-            </a>
+            <div class="group-actions-secondary">
+              <button type="button" id="btnCopyGroupMessage" class="btn btn-secondary">
+                <span>📋</span> Copiar Mensaje Completo
+              </button>
+              <a id="btnOpenRoomPreview" href="#" target="_blank" class="btn btn-outline">
+                <span>👀</span> Probar Sala
+              </a>
+            </div>
           </div>
 
           <!-- Mensaje listo para enviar -->
