@@ -140,6 +140,48 @@ if (fs.existsSync(ROOMS_FILE)) {
   }
 }
 
+// Calcular fecha de expiración de una sala (10 días tras la fecha del evento o 30 días tras creación)
+function calculateRoomExpiry(room) {
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const eventDate = room.event?.date;
+  if (eventDate && /^\d{4}-\d{2}-\d{2}$/.test(eventDate)) {
+    const [y, m, d] = eventDate.split('-').map(Number);
+    const eventEnd = new Date(y, m - 1, d, 23, 59, 59, 999);
+    if (!isNaN(eventEnd.getTime())) {
+      // 10 días exactos después de la fecha de realización del sorteo/evento
+      return new Date(eventEnd.getTime() + 10 * MS_PER_DAY);
+    }
+  }
+  // Si no se definió fecha de evento: 30 días tras su creación
+  const created = room.createdAt ? new Date(room.createdAt) : new Date();
+  const validCreated = isNaN(created.getTime()) ? new Date() : created;
+  return new Date(validCreated.getTime() + 30 * MS_PER_DAY);
+}
+
+// Limpiar salas que hayan superado su periodo de validez
+function cleanupExpiredRooms() {
+  const now = Date.now();
+  let changed = false;
+  let count = 0;
+  for (const [id, room] of roomsStore.entries()) {
+    const expiry = calculateRoomExpiry(room);
+    if (now > expiry.getTime()) {
+      roomsStore.delete(id);
+      changed = true;
+      count++;
+    }
+  }
+  if (changed) {
+    persistRooms();
+    console.log(`[Auto-cleanup] Se eliminaron ${count} sala(s) expirada(s).`);
+  }
+  return count;
+}
+
+// Ejecutar limpieza al iniciar y cada hora
+cleanupExpiredRooms();
+setInterval(cleanupExpiredRooms, 60 * 60 * 1000);
+
 function persistRooms() {
   try {
     const obj = Object.fromEntries(roomsStore);
@@ -299,25 +341,83 @@ app.post('/api/rooms/:id/wishlist', (req, res) => {
   });
 });
 
-// Consulta discreta para administración / creador
+// Consulta para administración / creador: inspección completa de salas
 app.get('/api/admin/overview', (req, res) => {
   const auth = req.headers['x-admin-key'] || req.query.key;
   if (auth !== 'secreto2026') {
     return res.status(401).json({ success: false, error: 'No autorizado' });
   }
 
-  const roomsList = Array.from(roomsStore.values()).map(r => ({
-    id: r.id,
-    event: r.event?.name || 'Amigo Invisible',
-    createdAt: r.createdAt,
-    members: r.members.map(m => ({
-      name: m.name,
-      hasPin: Boolean(m.pin),
-      wishlist: m.wishlist || ''
-    }))
-  }));
+  // Limpiar salas expiradas antes de responder
+  cleanupExpiredRooms();
 
-  res.json({ success: true, rooms: roomsList });
+  const now = Date.now();
+  const roomsList = Array.from(roomsStore.values()).map(r => {
+    const expiryDate = calculateRoomExpiry(r);
+    const msLeft = expiryDate.getTime() - now;
+    const daysLeft = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
+
+    return {
+      id: r.id,
+      event: {
+        name: r.event?.name || 'Amigo Invisible',
+        budget: r.event?.budget || '',
+        date: r.event?.date || '',
+        location: r.event?.location || '',
+        notes: r.event?.notes || ''
+      },
+      createdAt: r.createdAt,
+      expiresAt: expiryDate.toISOString(),
+      daysUntilExpiry: daysLeft,
+      members: r.members.map(m => ({
+        id: m.id,
+        name: m.name,
+        secretFriend: m.secretFriend,
+        hasPin: Boolean(m.pin),
+        pin: m.pin || null,
+        openedAt: m.openedAt || null,
+        wishlist: m.wishlist || ''
+      }))
+    };
+  });
+
+  // Más recientes primero
+  roomsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  res.json({
+    success: true,
+    totalRooms: roomsList.length,
+    rooms: roomsList
+  });
+});
+
+// Eliminar sala manualmente desde la administración
+app.delete('/api/admin/rooms/:id', (req, res) => {
+  const auth = req.headers['x-admin-key'] || req.query.key;
+  if (auth !== 'secreto2026') {
+    return res.status(401).json({ success: false, error: 'No autorizado' });
+  }
+
+  const { id } = req.params;
+  if (!roomsStore.has(id)) {
+    return res.status(404).json({ success: false, error: 'Sala no encontrada' });
+  }
+
+  roomsStore.delete(id);
+  persistRooms();
+
+  res.json({ success: true, message: `Sala ${id} eliminada con éxito` });
+});
+
+// Limpieza manual de salas expiradas
+app.post('/api/admin/cleanup', (req, res) => {
+  const auth = req.headers['x-admin-key'] || req.query.key;
+  if (auth !== 'secreto2026') {
+    return res.status(401).json({ success: false, error: 'No autorizado' });
+  }
+
+  const cleanedCount = cleanupExpiredRooms();
+  res.json({ success: true, cleaned: cleanedCount, remaining: roomsStore.size });
 });
 
 // Helper para crear transporter de Nodemailer

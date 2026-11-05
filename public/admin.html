@@ -134,19 +134,22 @@
         </div>
       </div>
 
-      <!-- Sección Discreta: Consulta de Deseos de los Participantes -->
+      <!-- Sección: Gestión e Inspección de Salas Creadas -->
       <div class="mt-4 pt-4" style="border-top: 1px solid #e2e8f0;">
-        <div class="flex-between align-center mb-3">
+        <div class="flex-between align-center mb-3" style="flex-wrap: wrap; gap: 10px;">
           <div>
-            <h3 class="text-sm font-bold uppercase text-muted">📋 Deseos y Sugerencias de Participantes</h3>
-            <p class="text-xs text-muted">Consulta lo que cada persona ha pedido recibir:</p>
+            <h3 class="text-sm font-bold uppercase text-muted">🎪 Salas Creadas en el Sitio (<span id="adminRoomsCount">0</span>)</h3>
+            <p class="text-xs text-muted">Inspecciona emparejamientos, PINs y deseos. Las salas se auto-eliminan 10 días tras el evento.</p>
           </div>
-          <button type="button" id="btnRefreshWishlists" class="btn btn-outline-sm">🔄 Actualizar</button>
+          <div class="flex-center gap-2">
+            <button type="button" id="btnCleanupExpired" class="btn btn-outline-sm" title="Eliminar salas con fecha expirada">🧹 Limpiar Expiradas</button>
+            <button type="button" id="btnRefreshRooms" class="btn btn-outline-sm">🔄 Actualizar</button>
+          </div>
         </div>
 
-        <div id="adminWishlistsContainer">
+        <div id="adminRoomsContainer">
           <div class="text-xs text-muted" style="padding: 16px; background: #f8fafc; border-radius: var(--radius-md); text-align: center;">
-            Cargando listas de deseos...
+            Cargando salas del sitio...
           </div>
         </div>
       </div>
