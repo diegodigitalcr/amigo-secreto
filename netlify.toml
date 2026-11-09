@@ -1,0 +1,6 @@
+[build]
+  publish = "public"
+  command = "echo 'Sin paso de build: sitio estático + Netlify Functions'"
+
+[functions]
+  node_bundler = "esbuild"
