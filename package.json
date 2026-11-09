@@ -1,18 +1,17 @@
 {
-  "name": "app-amigo-secreto",
-  "version": "1.0.0",
-  "description": "Aplicación sencilla para jugar al Amigo Invisible con notificaciones por WhatsApp y Correo",
-  "main": "server.js",
+  "name": "amigosecretoopen",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Amigo Secreto con notificaciones por WhatsApp y correo, en Netlify con Netlify Database",
+  "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "netlify dev"
   },
-  "keywords": ["amigo-secreto", "amigo-invisible", "secret-santa", "whatsapp", "email"],
-  "author": "",
-  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.21.2",
+    "@netlify/database": "^2.0.3",
     "nodemailer": "^6.9.16"
   }
 }

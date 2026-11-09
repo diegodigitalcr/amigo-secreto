@@ -2,7 +2,8 @@
  * Administrative Settings Module
  */
 const STORAGE_RULES_KEY = '_app_special_rules';
-const MASTER_PASS = 'secreto2026';
+// La clave se valida en el servidor (variable de entorno ADMIN_KEY en Netlify)
+let MASTER_PASS = '';
 
 let rules = [];
 
@@ -10,21 +11,34 @@ document.addEventListener('DOMContentLoaded', () => {
   initAdmin();
 });
 
+async function verifyAdminKey(key) {
+  if (!key) return false;
+  try {
+    const res = await fetch('/api/admin/overview', { headers: { 'x-admin-key': key } });
+    return res.ok;
+  } catch (err) {
+    return false;
+  }
+}
+
 function initAdmin() {
   const formAuth = document.getElementById('formAuth');
   formAuth.addEventListener('submit', (e) => {
     e.preventDefault();
     const key = document.getElementById('inputMasterKey').value.trim();
-    if (key === MASTER_PASS) {
-      document.getElementById('authScreen').classList.add('hidden');
-      document.getElementById('adminPanel').classList.remove('hidden');
-      loadRules();
-      loadRooms();
-    } else {
-      const err = document.getElementById('authError');
-      err.classList.remove('hidden');
-      setTimeout(() => err.classList.add('hidden'), 3000);
-    }
+    verifyAdminKey(key).then((ok) => {
+      if (ok) {
+        MASTER_PASS = key;
+        document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('adminPanel').classList.remove('hidden');
+        loadRules();
+        loadRooms();
+      } else {
+        const err = document.getElementById('authError');
+        err.classList.remove('hidden');
+        setTimeout(() => err.classList.add('hidden'), 3000);
+      }
+    });
   });
 
   document.getElementById('formAddRule').addEventListener('submit', handleAddRule);
@@ -137,7 +151,7 @@ async function loadRooms() {
   container.innerHTML = '<div class="text-xs text-muted p-3 text-center">Consultando salas en el servidor...</div>';
 
   try {
-    const res = await fetch(`/api/admin/overview?key=${encodeURIComponent(MASTER_PASS)}`);
+    const res = await fetch('/api/admin/overview', { headers: { 'x-admin-key': MASTER_PASS } });
     if (res.ok) {
       const data = await res.json();
       if (data.success && Array.isArray(data.rooms)) {
@@ -292,8 +306,9 @@ async function handleDeleteRoom(roomId) {
   }
 
   try {
-    const res = await fetch(`/api/admin/rooms/${encodeURIComponent(roomId)}?key=${encodeURIComponent(MASTER_PASS)}`, {
-      method: 'DELETE'
+    const res = await fetch(`/api/admin/rooms/${encodeURIComponent(roomId)}`, {
+      method: 'DELETE',
+      headers: { 'x-admin-key': MASTER_PASS }
     });
     const data = await res.json();
     if (data.success) {
@@ -313,8 +328,9 @@ async function handleCleanupExpired() {
   }
 
   try {
-    const res = await fetch(`/api/admin/cleanup?key=${encodeURIComponent(MASTER_PASS)}`, {
-      method: 'POST'
+    const res = await fetch('/api/admin/cleanup', {
+      method: 'POST',
+      headers: { 'x-admin-key': MASTER_PASS }
     });
     const data = await res.json();
     if (data.success) {
